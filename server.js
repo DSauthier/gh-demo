@@ -59,44 +59,72 @@ app.get('/api/cart', (req, res) => {
   });
 });
 
-// Create order (checkout) - VULNERABLE: Uses client-supplied total!
+// Create order (checkout) - SECURE: Server-side total calculation
 app.post('/api/checkout', (req, res) => {
-  // VULNERABILITY: Trust the client-supplied total instead of calculating server-side
-  const { total } = req.body;
+  // SECURITY FIX: Calculate total server-side from cart items, ignore any client-supplied total
   
-  if (total === undefined) {
-    return res.status(400).json({ error: 'Total amount required' });
-  }
-
-  // Get cart items to verify cart exists (but don't use for calculation!)
+  // Get cart items with prices for server-side total calculation
   const cartQuery = `
-    SELECT c.quantity, p.price, p.id as product_id
+    SELECT c.quantity, p.price, p.id as product_id, p.name
     FROM cart c
     JOIN products p ON c.product_id = p.id
   `;
   
   db.all(cartQuery, (err, cartItems) => {
     if (err) {
+      console.error('Database error during checkout:', err);
       return res.status(500).json({ error: 'Database error' });
     }
     
+    // Business rule validation: Reject empty carts
     if (cartItems.length === 0) {
       return res.status(400).json({ error: 'Cart is empty' });
     }
 
-    // VULNERABILITY: Use the client-supplied total directly!
-    const clientTotal = parseFloat(total);
+    // SECURITY: Calculate total server-side only - never trust client data
+    const serverCalculatedTotal = cartItems.reduce((sum, item) => {
+      return sum + (item.quantity * item.price);
+    }, 0);
     
-    // Create order with client-supplied total
+    // Business rule validation: Reject orders with zero or negative totals
+    if (serverCalculatedTotal <= 0) {
+      console.warn('Suspicious order attempt: Zero or negative total detected', {
+        cartItems: cartItems,
+        calculatedTotal: serverCalculatedTotal,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(400).json({ error: 'Invalid order total' });
+    }
+    
+    // Additional validation: Ensure all prices are positive
+    const hasInvalidPrices = cartItems.some(item => item.price <= 0 || item.quantity <= 0);
+    if (hasInvalidPrices) {
+      console.warn('Suspicious order attempt: Invalid product prices or quantities', {
+        cartItems: cartItems,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(400).json({ error: 'Invalid product data' });
+    }
+
+    // Create order with SERVER-CALCULATED total (secure)
     db.run(
       "INSERT INTO orders (total_amount, status) VALUES (?, 'completed')",
-      [clientTotal],
+      [serverCalculatedTotal],
       function(err) {
         if (err) {
+          console.error('Failed to create order:', err);
           return res.status(500).json({ error: 'Failed to create order' });
         }
         
         const orderId = this.lastID;
+        
+        // Security logging: Log successful order creation
+        console.log('Order created successfully:', {
+          orderId: orderId,
+          serverCalculatedTotal: serverCalculatedTotal.toFixed(2),
+          itemCount: cartItems.length,
+          timestamp: new Date().toISOString()
+        });
         
         // Clear cart after successful checkout
         db.run("DELETE FROM cart", (err) => {
@@ -108,7 +136,7 @@ app.post('/api/checkout', (req, res) => {
         res.json({ 
           message: 'Order created successfully', 
           order_id: orderId,
-          total: clientTotal.toFixed(2)
+          total: serverCalculatedTotal.toFixed(2)
         });
       }
     );
