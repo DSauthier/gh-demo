@@ -1,4 +1,3 @@
-# GitHub Actions workflow for deploying to EC2 (prod and test)
 name: Deploy to EC2
 
 on:
