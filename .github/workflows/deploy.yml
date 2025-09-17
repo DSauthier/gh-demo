@@ -48,6 +48,5 @@ jobs:
             pm2 delete app || true && \
             pm2 start app.js --name app --update-env && \
             pm2 save && \
-            pm2 startup && \
             pm2 list
           "
