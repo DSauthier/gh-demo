@@ -39,6 +39,15 @@ jobs:
         run: |
           rsync -avz --delete --exclude '.git' --exclude 'node_modules' ./ ${{ steps.vars.outputs.user }}@${{ steps.vars.outputs.host }}:${{ steps.vars.outputs.dir }}
 
-      - name: Install dependencies and restart app
+      - name: Install dependencies and restart app with pm2
         run: |
-          ssh ${{ steps.vars.outputs.user }}@${{ steps.vars.outputs.host }} "cd ${{ steps.vars.outputs.dir }} && npm install && pkill node || true && nohup node app.js > app.log 2>&1 &"
+          ssh ${{ steps.vars.outputs.user }}@${{ steps.vars.outputs.host }} "\
+            cd ${{ steps.vars.outputs.dir }} && \
+            npm install -g pm2 && \
+            npm install && \
+            pm2 delete app || true && \
+            pm2 start app.js --name app --update-env && \
+            pm2 save && \
+            pm2 startup && \
+            pm2 list
+          "
