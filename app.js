@@ -6,6 +6,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
@@ -176,8 +177,8 @@ app.delete('/api/cart/clear', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🛒 Shopping cart server running at http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`🛒 Shopping cart server running at http://${HOST}:${PORT}`);
   console.log(`🔥 VULNERABLE VERSION - Refund system has security issues!`);
   console.log(`🎯 Try: Add items to cart, checkout, then request refund with NEGATIVE amount`);
 });
