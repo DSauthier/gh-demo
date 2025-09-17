@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniCart - Shopping Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f8f9fa;
+            color: #333;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            padding: 20px 0; 
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+        .header h1 { text-align: center; font-size: 2.5em; }
+        .header p { text-align: center; margin-top: 10px; opacity: 0.9; }
+        
+        .main-content { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        .products-section, .cart-section { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section-title { 
+            font-size: 1.5em; 
+            margin-bottom: 20px; 
+            color: #667eea;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .product { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            padding: 15px; 
+            margin: 10px 0; 
+            border: 1px solid #eee; 
+            border-radius: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .product:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .product-info h3 { color: #333; margin-bottom: 5px; }
+        .product-info p { color: #666; font-size: 0.9em; }
+        .product-price { font-weight: bold; color: #667eea; font-size: 1.2em; }
+        
+        .product-actions { display: flex; align-items: center; gap: 10px; }
+        .quantity-input { width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        
+        button { 
+            background: #667eea; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 6px; 
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover { background: #5a67d8; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .danger { background: #e53e3e; }
+        .danger:hover { background: #c53030; }
+        .success { background: #38a169; }
+        .success:hover { background: #2f855a; }
+        
+        .cart-item { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 10px 0; 
+            border-bottom: 1px solid #eee;
+        }
+        .cart-total { 
+            font-size: 1.3em; 
+            font-weight: bold; 
+            margin: 20px 0; 
+            color: #667eea;
+        }
+        
+        .action-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            background: #f7fafc; 
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .refund-section { 
+            background: #fed7d7; 
+            border-left-color: #e53e3e;
+        }
+        
+        input[type="number"] { 
+            width: 120px; 
+            padding: 8px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            margin: 0 10px;
+        }
+        
+        .result { 
+            margin: 15px 0; 
+            padding: 15px; 
+            border-radius: 6px; 
+            font-weight: 500;
+        }
+        .success-msg { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .error-msg { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        
+        .order-info { 
+            background: #e6fffa; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 15px 0;
+            border-left: 4px solid #38a169;
+        }
+        
+        .exploit-hint {
+            background: #fff5b7;
+            border: 2px dashed #d69e2e;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; }
+            .container { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 MiniCart</h1>
+            <p>Copilot + GHAS DevSecOps Demo - Shopping Cart with Refund Vulnerability</p>
+        </div>
+
+        <div class="main-content">
+            <div class="products-section">
+                <h2 class="section-title">🛍️ Products</h2>
+                <div id="products-list">Loading products...</div>
+                
+                <div class="action-section">
+                    <button onclick="clearCart()" class="danger">🗑️ Clear Cart</button>
+                    <button onclick="loadProducts()" class="success">🔄 Refresh Products</button>
+                </div>
+            </div>
+
+            <div class="cart-section">
+                <h2 class="section-title">🛒 Your Cart</h2>
+                <div id="cart-items">Loading cart...</div>
+                <div id="cart-total" class="cart-total">Total: $0.00</div>
+                
+                <div class="action-section">
+                    <button onclick="checkout()" id="checkout-btn">💳 Checkout</button>
+                    <div id="checkout-result"></div>
+                </div>
+
+                <!-- Refund Section - This is where the vulnerability is exploited -->
+                <div class="action-section refund-section">
+                    <h3>💰 Process Refund</h3>
+                    <div class="exploit-hint">
+                        🎯 <strong>Demo Exploit:</strong> Try entering a <strong>negative number</strong> as the refund amount!
+                    </div>
+                    <div>
+                        <label>Order ID:</label>
+                        <input type="number" id="refund-order-id" placeholder="1" value="1">
+                        <label>Refund Amount:</label>
+                        <input type="number" id="refund-amount" placeholder="10.00" step="0.01">
+                        <button onclick="processRefund()" class="danger">🔄 Process Refund</button>
+                    </div>
+                    <div id="refund-result"></div>
+                </div>
+
+                <div id="order-info" class="order-info" style="display: none;">
+                    <h4>📋 Last Order Details</h4>
+                    <div id="order-details"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentOrderId = null;
+
+        // Load products on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+            loadCart();
+        });
+
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                const products = await response.json();
+                
+                const productsHtml = products.map(product => `
+                    <div class="product">
+                        <div class="product-info">
+                            <h3>${product.name}</h3>
+                            <p>${product.description}</p>
+                        </div>
+                        <div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>
+                        <div class="product-actions">
+                            <input type="number" class="quantity-input" id="qty-${product.id}" value="1" min="1">
+                            <button onclick="addToCart(${product.id})">➕ Add to Cart</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('products-list').innerHTML = productsHtml;
+            } catch (error) {
+                document.getElementById('products-list').innerHTML = 
+                    '<div class="error-msg">Error loading products: ' + error.message + '</div>';
+            }
+        }
+
+        async function addToCart(productId) {
+            const quantity = parseInt(document.getElementById(`qty-${productId}`).value);
+            
+            try {
+                const response = await fetch('/api/cart/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_id: productId, quantity })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    loadCart(); // Refresh cart
+                    showResult('success-msg', '✅ Item added to cart!');
+                } else {
+                    showResult('error-msg', '❌ ' + result.error);
+                }
+            } catch (error) {
+                showResult('error-msg', '❌ Error adding item: ' + error.message);
+            }
+        }
+
+        async function loadCart() {
+            try {
+                const response = await fetch('/api/cart');
+                const cart = await response.json();
+                
+                if (cart.items && cart.items.length > 0) {
+                    const cartHtml = cart.items.map(item => `
+                        <div class="cart-item">
+                            <div>${item.name} x${item.quantity}</div>
+                            <div>$${parseFloat(item.subtotal).toFixed(2)}</div>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('cart-items').innerHTML = cartHtml;
+                    document.getElementById('cart-total').innerHTML = `Total: $${cart.total}`;
+                } else {
+                    document.getElementById('cart-items').innerHTML = '<div>🛒 Your cart is empty</div>';
+                    document.getElementById('cart-total').innerHTML = 'Total: $0.00';
+                }
+            } catch (error) {
+                document.getElementById('cart-items').innerHTML = 
+                    '<div class="error-msg">Error loading cart: ' + error.message + '</div>';
+            }
+        }
+
+        async function checkout() {
+            try {
+                const response = await fetch('/api/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    currentOrderId = result.order_id;
+                    document.getElementById('refund-order-id').value = currentOrderId;
+                    
+                    showResult('success-msg', `✅ ${result.message} (Order #${result.order_id})`, 'checkout-result');
+                    
+                    // Show order info
+                    document.getElementById('order-info').style.display = 'block';
+                    document.getElementById('order-details').innerHTML = 
+                        `Order #${result.order_id} - Total: $${result.total}`;
+                    
+                    loadCart(); // Refresh cart (should be empty now)
+                } else {
+                    showResult('error-msg', '❌ ' + result.error, 'checkout-result');
+                }
+            } catch (error) {
+                showResult('error-msg', '❌ Checkout error: ' + error.message, 'checkout-result');
+            }
+        }
+
+        async function processRefund() {
+            const orderId = document.getElementById('refund-order-id').value;
+            const refundAmount = document.getElementById('refund-amount').value;
+            
+            if (!orderId || !refundAmount) {
+                showResult('error-msg', '❌ Please enter both Order ID and Refund Amount', 'refund-result');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/refund', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        order_id: parseInt(orderId), 
+                        refund_amount: parseFloat(refundAmount) 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Highlight the vulnerability when negative amounts work
+                    if (parseFloat(refundAmount) < 0) {
+                        showResult('error-msg', 
+                            `🚨 VULNERABILITY EXPLOITED! Negative refund of $${Math.abs(refundAmount)} gave customer money! New total: $${result.new_total}`, 
+                            'refund-result');
+                    } else {
+                        showResult('success-msg', 
+                            `✅ ${result.message} - Refunded: $${result.refunded_amount}, Remaining: $${result.remaining_total}`, 
+                            'refund-result');
+                    }
+                } else {
+                    showResult('error-msg', '❌ ' + result.error, 'refund-result');
+                }
+            } catch (error) {
+                showResult('error-msg', '❌ Refund error: ' + error.message, 'refund-result');
+            }
+        }
+
+        async function clearCart() {
+            try {
+                const response = await fetch('/api/cart/clear', { method: 'DELETE' });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    loadCart();
+                    showResult('success-msg', '✅ Cart cleared!');
+                } else {
+                    showResult('error-msg', '❌ ' + result.error);
+                }
+            } catch (error) {
+                showResult('error-msg', '❌ Error clearing cart: ' + error.message);
+            }
+        }
+
+        function showResult(className, message, targetId = null) {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${className}`;
+            resultDiv.innerHTML = message;
+            
+            const target = targetId ? document.getElementById(targetId) : document.body;
+            const existingResult = target.querySelector('.result');
+            if (existingResult) {
+                existingResult.remove();
+            }
+            
+            target.appendChild(resultDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (resultDiv.parentNode) {
+                    resultDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
