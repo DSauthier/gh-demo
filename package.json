@@ -2,9 +2,9 @@
   "name": "copilot-shopping-cart-demo",
   "version": "1.0.0",
   "description": "Shopping Cart Demo: Copilot + GHAS DevSecOps workflow",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node app.js",
+  "start": "node server.js",
     "start-fixed": "node app-fixed.js",
     "dev": "nodemon app.js",
     "test": "node test-refund-exploit.js"

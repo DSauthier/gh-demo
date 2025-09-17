@@ -3,6 +3,12 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
+# Database files (SQLite)
+*.db
+*.sqlite
+*.sqlite3
+shop-demo.db
+
 # Logs
 logs/
 *.log
