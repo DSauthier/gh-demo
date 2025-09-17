@@ -59,9 +59,16 @@ app.get('/api/cart', (req, res) => {
   });
 });
 
-// Create order (checkout)
+// Create order (checkout) - VULNERABLE: Uses client-supplied total!
 app.post('/api/checkout', (req, res) => {
-  // Get cart total
+  // VULNERABILITY: Trust the client-supplied total instead of calculating server-side
+  const { total } = req.body;
+  
+  if (total === undefined) {
+    return res.status(400).json({ error: 'Total amount required' });
+  }
+
+  // Get cart items to verify cart exists (but don't use for calculation!)
   const cartQuery = `
     SELECT c.quantity, p.price, p.id as product_id
     FROM cart c
@@ -76,13 +83,14 @@ app.post('/api/checkout', (req, res) => {
     if (cartItems.length === 0) {
       return res.status(400).json({ error: 'Cart is empty' });
     }
+
+    // VULNERABILITY: Use the client-supplied total directly!
+    const clientTotal = parseFloat(total);
     
-    const total = cartItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-    
-    // Create order
+    // Create order with client-supplied total
     db.run(
       "INSERT INTO orders (total_amount, status) VALUES (?, 'completed')",
-      [total],
+      [clientTotal],
       function(err) {
         if (err) {
           return res.status(500).json({ error: 'Failed to create order' });
@@ -100,39 +108,10 @@ app.post('/api/checkout', (req, res) => {
         res.json({ 
           message: 'Order created successfully', 
           order_id: orderId,
-          total: total.toFixed(2)
+          total: clientTotal.toFixed(2)
         });
       }
     );
-// Create order (checkout) - VULNERABLE: Accepts total from client
-app.post('/api/checkout', (req, res) => {
-  const { total } = req.body;
-  if (total === undefined) {
-    return res.status(400).json({ error: 'Total amount required' });
-  }
-  // Create order with client-supplied total (BUG)
-  db.run(
-    "INSERT INTO orders (total_amount, status) VALUES (?, 'completed')",
-    [total],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to create order' });
-      }
-      const orderId = this.lastID;
-      // Clear cart after successful checkout
-      db.run("DELETE FROM cart", (err) => {
-        if (err) {
-          console.error('Error clearing cart:', err);
-        }
-      });
-      res.json({ 
-        message: 'Order created successfully', 
-        order_id: orderId,
-        total: Number(total).toFixed(2)
-      });
-    }
-  );
-});
   });
 });
 
@@ -203,6 +182,16 @@ app.delete('/api/cart/clear', (req, res) => {
       return res.status(500).json({ error: 'Failed to clear cart' });
     }
     res.json({ message: 'Cart cleared' });
+  });
+});
+
+// Get all orders (for order history page)
+app.get('/api/orders', (req, res) => {
+  db.all("SELECT * FROM orders ORDER BY created_at DESC", (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(rows);
   });
 });
 

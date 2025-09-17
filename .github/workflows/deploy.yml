@@ -37,7 +37,7 @@ jobs:
 
       - name: Deploy app to EC2
         run: |
-          rsync -avz --delete --exclude '.git' --exclude 'node_modules' ./ ${{ steps.vars.outputs.user }}@${{ steps.vars.outputs.host }}:${{ steps.vars.outputs.dir }}
+          rsync -avz --delete --exclude '.git' --exclude 'node_modules' --exclude '*.db' ./ ${{ steps.vars.outputs.user }}@${{ steps.vars.outputs.host }}:${{ steps.vars.outputs.dir }}
 
       - name: Install dependencies and restart app with pm2
         run: |
@@ -46,7 +46,7 @@ jobs:
             sudo npm install -g pm2 && \
             npm install && \
             pm2 delete app || true && \
-            pm2 start app.js --name app --update-env && \
+            pm2 start server.js --name app --update-env && \
             pm2 save && \
             pm2 list
           "

@@ -1,13 +1,21 @@
 // filepath: db.js
 const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
 
-// Create in-memory database for the shopping cart demo
-const db = new sqlite3.Database(':memory:');
+// For demo purposes, always start with a clean database
+const dbFile = 'shop-demo.db';
+if (fs.existsSync(dbFile)) {
+  fs.unlinkSync(dbFile);
+  console.log('🗑️ Previous database cleared for clean demo');
+}
+
+// Create fresh file-based database for the shopping cart demo
+const db = new sqlite3.Database(dbFile);
 
 // Initialize database with products, cart, and orders
 db.serialize(() => {
   // Products table
-  db.run(`CREATE TABLE products (
+  db.run(`CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     price DECIMAL(10,2) NOT NULL,
@@ -16,7 +24,7 @@ db.serialize(() => {
   )`);
 
   // Cart table (session-based for demo simplicity)
-  db.run(`CREATE TABLE cart (
+  db.run(`CREATE TABLE IF NOT EXISTS cart (
     id INTEGER PRIMARY KEY,
     product_id INTEGER,
     quantity INTEGER,
@@ -25,7 +33,7 @@ db.serialize(() => {
   )`);
 
   // Orders table
-  db.run(`CREATE TABLE orders (
+  db.run(`CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY,
     total_amount DECIMAL(10,2),
     status TEXT DEFAULT 'pending',
@@ -33,7 +41,7 @@ db.serialize(() => {
   )`);
 
   // Order items table
-  db.run(`CREATE TABLE order_items (
+  db.run(`CREATE TABLE IF NOT EXISTS order_items (
     id INTEGER PRIMARY KEY,
     order_id INTEGER,
     product_id INTEGER,
@@ -43,7 +51,7 @@ db.serialize(() => {
     FOREIGN KEY (product_id) REFERENCES products (id)
   )`);
 
-  // Seed with sample products (mini Amazon style)
+  // Always seed with fresh sample products for demo
   const products = [
     ['Wireless Headphones', 79.99, 'High-quality wireless headphones with noise cancellation'],
     ['Smartphone Case', 24.99, 'Protective case for latest smartphone models'],
@@ -51,14 +59,13 @@ db.serialize(() => {
     ['Bluetooth Speaker', 49.99, 'Portable Bluetooth speaker with great sound quality'],
     ['Laptop Stand', 34.99, 'Adjustable aluminum laptop stand']
   ];
-
   const stmt = db.prepare("INSERT INTO products (name, price, description) VALUES (?, ?, ?)");
   products.forEach(product => {
     stmt.run(product);
   });
   stmt.finalize();
 
-  console.log('Database initialized with sample products');
+  console.log('✅ Fresh database initialized with sample products for demo');
 });
 
 module.exports = db;
