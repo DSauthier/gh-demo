@@ -104,6 +104,35 @@ app.post('/api/checkout', (req, res) => {
         });
       }
     );
+// Create order (checkout) - VULNERABLE: Accepts total from client
+app.post('/api/checkout', (req, res) => {
+  const { total } = req.body;
+  if (total === undefined) {
+    return res.status(400).json({ error: 'Total amount required' });
+  }
+  // Create order with client-supplied total (BUG)
+  db.run(
+    "INSERT INTO orders (total_amount, status) VALUES (?, 'completed')",
+    [total],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to create order' });
+      }
+      const orderId = this.lastID;
+      // Clear cart after successful checkout
+      db.run("DELETE FROM cart", (err) => {
+        if (err) {
+          console.error('Error clearing cart:', err);
+        }
+      });
+      res.json({ 
+        message: 'Order created successfully', 
+        order_id: orderId,
+        total: Number(total).toFixed(2)
+      });
+    }
+  );
+});
   });
 });
 
