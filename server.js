@@ -63,30 +63,29 @@ app.get('/api/cart', (req, res) => {
 app.post('/api/checkout', (req, res) => {
   // VULNERABILITY: Trust the client-supplied total instead of calculating server-side
   const { total } = req.body;
-  
+
   if (total === undefined) {
     return res.status(400).json({ error: 'Total amount required' });
   }
 
-  // Get cart items to verify cart exists (but don't use for calculation!)
+  // Get cart items to verify cart exists and calculate real total
   const cartQuery = `
     SELECT c.quantity, p.price, p.id as product_id
     FROM cart c
     JOIN products p ON c.product_id = p.id
   `;
-  
+
   db.all(cartQuery, (err, cartItems) => {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
-    
+
     if (cartItems.length === 0) {
       return res.status(400).json({ error: 'Cart is empty' });
     }
 
     // VULNERABILITY: Use the client-supplied total directly!
     const clientTotal = parseFloat(total);
-    
     // Create order with client-supplied total
     db.run(
       "INSERT INTO orders (total_amount, status) VALUES (?, 'completed')",
@@ -95,18 +94,18 @@ app.post('/api/checkout', (req, res) => {
         if (err) {
           return res.status(500).json({ error: 'Failed to create order' });
         }
-        
+
         const orderId = this.lastID;
-        
+
         // Clear cart after successful checkout
         db.run("DELETE FROM cart", (err) => {
           if (err) {
             console.error('Error clearing cart:', err);
           }
         });
-        
-        res.json({ 
-          message: 'Order created successfully', 
+
+        res.json({
+          message: 'Order created successfully',
           order_id: orderId,
           total: clientTotal.toFixed(2)
         });
