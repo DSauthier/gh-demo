@@ -1,0 +1,19 @@
+name: Reset Demo Environment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reset-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run reset script on remote server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEMO_SERVER_HOST }}
+          username: ${{ secrets.DEMO_SERVER_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd /home/ec2-user/gh-demo
+            ./reset-demo.sh

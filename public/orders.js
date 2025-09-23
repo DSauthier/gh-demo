@@ -24,32 +24,22 @@ async function loadOrders() {
         // Calculate statistics
         updateStats(orders);
 
-        // Generate table rows
+        // Generate table rows (no notes column)
         const ordersHtml = orders.map(order => {
             const date = new Date(order.created_at).toLocaleString();
             const amount = parseFloat(order.total_amount);
-            const isSuspicious = amount <= 0 || amount < 1; // Flagging very low amounts as suspicious
-            
-            let notes = '';
             let amountClass = 'amount-normal';
-            
             if (amount <= 0) {
-                notes = '🚨 EXPLOIT: Zero/Negative amount!';
                 amountClass = 'amount-exploited';
             } else if (amount < 1) {
-                notes = '⚠️ SUSPICIOUS: Very low amount';
                 amountClass = 'amount-exploited';
-            } else {
-                notes = '✅ Normal order';
             }
-
             return `
                 <tr>
                     <td>#${order.id}</td>
                     <td>${date}</td>
                     <td class="${amountClass}">$${amount.toFixed(2)}</td>
                     <td>${order.status}</td>
-                    <td>${notes}</td>
                 </tr>
             `;
         }).join('');
