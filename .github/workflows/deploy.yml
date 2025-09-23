@@ -46,6 +46,7 @@ jobs:
             sudo npm install -g pm2 && \
             npm install && \
             pm2 delete app || true && \
+            fuser -k 3000/tcp || true && \
             pm2 start server.js --name app --update-env && \
             pm2 save && \
             pm2 list
