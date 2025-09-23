@@ -1,5 +1,15 @@
 // filepath: app.js
 const express = require('express');
+const fs = require('fs');
+// Set up a write stream for logging
+const logStream = fs.createWriteStream('/home/ec2-user/gh-demo/app.log', { flags: 'a' });
+
+// Helper to log to both console and file
+function logBoth(...args) {
+  const msg = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
+  console.log(msg);
+  logStream.write(msg + '\n');
+}
 const bodyParser = require('body-parser');
 const db = require('./db');
 const path = require('path');
@@ -195,7 +205,7 @@ app.get('/api/orders', (req, res) => {
 });
 
 app.listen(PORT, HOST, () => {
-  console.log(`🛒 Shopping cart server running at http://${HOST}:${PORT}`);
-  console.log(`🔥 VULNERABLE VERSION - Refund system has security issues!`);
-  console.log(`🎯 Try: Add items to cart, checkout, then request refund with NEGATIVE amount`);
+  logBoth(`🛒 Shopping cart server running at http://${HOST}:${PORT}`);
+  logBoth(`🔥 VULNERABLE VERSION - Refund system has security issues!`);
+  logBoth(`🎯 Try: Add items to cart, checkout, then request refund with NEGATIVE amount`);
 });
