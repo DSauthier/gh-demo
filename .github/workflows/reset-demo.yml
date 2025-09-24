@@ -44,3 +44,11 @@ jobs:
             cd /home/ec2-user/gh-demo
             chmod +x reset-demo.sh
             ./reset-demo.sh
+
+      - name: Trigger create-reset-main-issue workflow
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/DSauthier/gh-demo/dispatches \
+            -d '{"event_type":"trigger-create-reset-main-issue"}'
