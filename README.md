@@ -1,73 +1,67 @@
-# 🛒 Shopping Cart Demo: Copilot + GHAS DevSecOps Workflow
 
-A 10-minute live demo showcasing how GitHub Copilot and GitHub Advanced Security work together to identify, analyze, and fix business logic vulnerabilities in a realistic shopping cart application.
+
+# 🛒 Shopping Cart Demo: Copilot DevSecOps Workflow
+
+A 10-minute live demo showing how GitHub Copilot and GitHub’s default security features (dependency and secret scanning) can help identify, analyze, and fix real-world business logic vulnerabilities in a Node.js shopping cart app.
+
 
 ## 🎯 Demo Overview
 
-This demo features a mini shopping cart application (like a simplified Amazon) with a **deliberately vulnerable refund system** that allows customers to exploit negative refund amounts to gain money instead of being charged. The demo shows the complete DevSecOps loop: from vulnerability discovery to Copilot-assisted remediation and secure deployment.
+This demo features a simple shopping cart application with a **deliberate business logic vulnerability**: users can manipulate the UI or API to change the final checkout cart value, resulting in unauthorized discounts or refunds. There is no legitimate refund system—the vulnerability is that the backend blindly trusts user input for refund amounts.
+
+**Note:** This repository uses only GitHub’s default security features (dependency and secret scanning). No custom CodeQL or advanced GHAS workflows are enabled by default.
 
 ## 🚨 The Vulnerability
 
-**Business Impact**: Customers can exploit the refund system by entering negative amounts, effectively reversing charges and getting money from the business.
+**Business Impact**: Users can manipulate the checkout process (via UI or API) to set negative or arbitrary values, causing the business to lose money through unauthorized discounts or refunds.
 
-**Technical Details**: The `/api/refund` endpoint lacks proper input validation and business logic checks, allowing negative refund amounts that add money to customer accounts instead of processing legitimate refunds.
+**Technical Details**: The `/api/refund` endpoint does not validate refund amounts, allowing negative values that increase the user's balance instead of processing legitimate refunds. This endpoint exists only to demonstrate the vulnerability and is not a real feature.
 
 ## 🎬 10-Minute Demo Script
 
-### **Minutes 1-2: Problem Setup & Business Impact**
-> "Today I'll show you a real-world DevSecOps scenario where GitHub Copilot and GHAS help us quickly identify and fix a critical business logic vulnerability."
 
-1. **Start the vulnerable application:**
-   ```bash
-   npm install && npm start
-   ```
+
+### **Minutes 1-2: Problem Setup & Business Impact**
+> "Today I'll show you a real-world DevSecOps scenario where GitHub Copilot and GitHub’s default security features help us quickly identify and fix a critical business logic vulnerability."
+
+
+1. **Access the running application:**
+   - The demo app is already deployed and running in the cloud.
+   - Open [http://18.212.98.138:3000/](http://18.212.98.138:3000/) in your browser.
+
 
 2. **Demo the vulnerability live:**
-   - Open `http://localhost:3000`
-   - Add items to cart (e.g., 2x Wireless Headphones = $159.98)
+   - In your browser at [http://18.212.98.138:3000/](http://18.212.98.138:3000/), add items to cart (e.g., 2x Wireless Headphones = $159.98)
    - Checkout to create Order #1
-   - In refund section, enter Order ID `1` and refund amount `-100`
-   - Show how customer gets money instead of being charged
+   - Open browser dev tools and manipulate the checkout or refund UI/API to send a negative or arbitrary value (e.g., refund amount `-100`)
+   - Show how the user receives money or a discount not intended by the business
 
 3. **Explain business impact:**
-   > "This isn't just a technical bug - customers discovered they can get money from us by entering negative refund amounts. Our finance team noticed unusual transactions where customers were being paid instead of charged."
+   > "This isn't just a technical bug—users discovered they can manipulate the checkout process to get unauthorized discounts or refunds. Our finance team noticed unusual transactions where customers were being paid instead of charged."
+
 
 ### **Minutes 3-4: GitHub Issue & Documentation**
 > "Let's see how this would typically flow through our development process."
 
 1. **Show pre-created GitHub issue** (create this beforehand):
    ```
-   Title: "Customers can exploit refund system with negative amounts"
+   Title: "Users can manipulate checkout/refund to get unauthorized discounts"
    
    Description:
-   - Customers discovered they can enter negative refund amounts
-   - Instead of being charged, they receive money
+   - Users discovered they can change the refund or checkout value via the UI or API
+   - Instead of being charged, they receive money or discounts
    - Financial impact: $XX,XXX in fraudulent transactions
    - Affected endpoint: POST /api/refund
    - Steps to reproduce: [include screenshots]
    ```
 
-2. **Demonstrate the issue in code:**
-   - Open `app.js`, navigate to `/api/refund` endpoint (line ~85)
-   - Point out missing validation: "No check for negative amounts"
 
 ### **Minutes 5-7: Copilot Agent Solution**
 > "Now let's see how GitHub Copilot can help us analyze and fix this vulnerability."
 
-1. **Open GitHub Copilot Chat/Workspace and use this prompt:**
-   ```
-   I have a GitHub issue (#[issue-number]) about customers exploiting our refund system with negative amounts. Please:
-   1. Analyze the refund endpoint in app.js 
-   2. Identify the security vulnerability
-   3. Implement a comprehensive fix with proper input validation and business logic
-   4. Ensure the fix prevents all potential abuse scenarios
-   
-   The fix should include:
-   - Input validation for refund amounts (must be positive)
-   - Business logic validation (refund can't exceed order total)
-   - Proper error handling and security responses
-   - Prevention of double-refunds
-   ```
+1. **Assign Copilot agent to the issue:**
+   - In the GitHub UI, assign Copilot to the pre-created issue.
+   - Watch Copilot analyze the code and propose a fix for the vulnerable endpoint.
 
 2. **Show Copilot's analysis:**
    - Watch Copilot identify the vulnerability
@@ -80,6 +74,8 @@ This demo features a mini shopping cart application (like a simplified Amazon) w
      - Business logic: `if (refundValue > order.total_amount)`
      - Status checks: `if (order.status === 'refunded')`
 
+
+
 ### **Minutes 8-9: Testing & GitHub Actions Deployment**
 > "Let's verify our fix works and show the automated deployment pipeline."
 
@@ -87,13 +83,13 @@ This demo features a mini shopping cart application (like a simplified Amazon) w
    ```bash
    npm run start-fixed
    ```
-   - Try the same exploit: Order something, then try negative refund
+   - Try the same exploit: Order something, then try negative refund or manipulate the UI
    - Show error: "Invalid refund amount. Refund amount must be a positive number."
 
 2. **Show the GitHub Actions workflow:**
    - Open `.github/workflows/deploy.yml`
-   - Explain the pipeline: CodeQL security scan → Deploy to EC2
-   - Show how GHAS would detect similar vulnerabilities automatically
+   - Explain the pipeline: Deploys to an AWS VM using SSH and PM2 (see deploy.yml for details)
+   - Note: No custom CodeQL or advanced security scanning is enabled by default—only GitHub’s default security features are present.
 
 3. **Commit and push the fix:**
    ```bash
@@ -102,22 +98,41 @@ This demo features a mini shopping cart application (like a simplified Amazon) w
    git push origin main
    ```
 
+
+
 ### **Minute 10: Results & DevSecOps Loop Completion**
 > "This demonstrates the complete DevSecOps loop with AI assistance."
 
 1. **Show the complete workflow:**
    - ✅ Issue identified and documented
-   - ✅ Copilot analyzed and provided comprehensive fix
+   - ✅ Copilot agent assigned and working
    - ✅ Automated testing and deployment
    - ✅ Security vulnerability resolved
 
 2. **Key takeaways:**
    - Copilot understands business logic, not just security patterns
    - AI-assisted development speeds up critical fixes
-   - GHAS provides continuous security monitoring
+   - GitHub’s default security features (dependency and secret scanning) provide basic protection
    - Complete automation from issue to deployment
 
-## 🛠️ Setup Instructions
+---
+
+## �️ GitHub Issue and Documentation
+
+1. Show the pre-created GitHub issue describing the vulnerability.
+2. Demonstrate the issue in the application and code.
+3. Assign Copilot agent to the issue and watch it work.
+4. Use the GitHub Agents panel to track Copilot’s activities and create a new request:
+   - Example: Add internationalization (i18n) by supporting Portuguese (Brazil) and English (US) with a flag button in the UI.
+5. Watch Copilot work on the new task and explain the MCP server’s role.
+6. Review and merge the PR for the first task, triggering deployment.
+7. Show the resolution in the running application.
+
+## 🔄 Resetting the Demo
+
+To reset the AWS VM and application to a clean state for repeated demos, use the provided GitHub Actions workflow (`reset.yml`). This will restore the instance and database to the original vulnerable state.
+
+## �🛠️ Setup Instructions
 
 ### Pre-Demo Setup (5 minutes before demo):
 
@@ -224,13 +239,17 @@ shopping-cart-demo/
 └── README.md                 # This file
 ```
 
+
+
 ## 🔧 Technical Details
 
 - **Framework**: Node.js + Express
-- **Database**: In-memory SQLite (no external dependencies)
+- **Database**: SQLite (file-based, no external dependencies)
 - **Frontend**: Vanilla HTML/CSS/JavaScript
-- **Vulnerability**: Business logic flaw in refund processing
+- **Vulnerability**: Business logic flaw—backend trusts user input for refund/checkout values
 - **Fix**: Input validation + business rules + error handling
+- **Deployment**: GitHub Actions deploys to an AWS VM using SSH and PM2 (see `.github/workflows/deploy.yml`)
+- **Security**: Only GitHub’s default security features (dependency and secret scanning) are enabled by default. No custom CodeQL or advanced GHAS workflows are present.
 
 ## 🏆 Demo Success Metrics
 
