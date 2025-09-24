@@ -1,14 +1,16 @@
 // filepath: app.js
 const express = require('express');
 const fs = require('fs');
-// Set up a write stream for logging
-const logStream = fs.createWriteStream('/home/ec2-user/gh-demo/app.log', { flags: 'a' });
+
+// Set up a write stream for logging (commented out for now)
+// const logStream = fs.createWriteStream('/home/ec2-user/gh-demo/app.log', { flags: 'a' });
 
 // Helper to log to both console and file
+// Helper to log to both console and file (commented out for now)
 function logBoth(...args) {
   const msg = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
   console.log(msg);
-  logStream.write(msg + '\n');
+  // logStream.write(msg + '\n');
 }
 const bodyParser = require('body-parser');
 const db = require('./db');
