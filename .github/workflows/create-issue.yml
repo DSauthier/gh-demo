@@ -1,0 +1,62 @@
+name: Create GitHub Issue from github-issue.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_file:
+        description: 'Path to the issue markdown file'
+        required: false
+        default: 'github-issue.md'
+
+jobs:
+  create-issue:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract issue details and create issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          # Use GH_PAT if available, otherwise fall back to GITHUB_TOKEN
+          TOKEN="${GH_PAT:-$GITHUB_TOKEN}"
+          
+          # Read the issue file
+          ISSUE_FILE="${{ github.event.inputs.issue_file || 'github-issue.md' }}"
+          
+          if [[ ! -f "$ISSUE_FILE" ]]; then
+            echo "Error: Issue file $ISSUE_FILE not found"
+            exit 1
+          fi
+          
+          # Extract title (first line after removing markdown header)
+          TITLE=$(head -n 1 "$ISSUE_FILE" | sed 's/^# //')
+          
+          # Extract body (everything after the first line)
+          BODY=$(tail -n +3 "$ISSUE_FILE")
+          
+          # Create labels array
+          LABELS='["critical", "security", "bug", "financial-impact", "p0"]'
+          
+          # Create the issue using GitHub CLI
+          echo "Creating issue: $TITLE"
+          
+          # Use gh CLI to create issue
+          gh auth login --with-token <<< "$TOKEN"
+          
+          echo "$BODY" | gh issue create \
+            --title "$TITLE" \
+            --body-file - \
+            --label "critical,security,bug,financial-impact,p0" \
+            --assignee "DSauthier"
+
+      - name: Display created issue
+        run: |
+          echo "Issue created successfully!"
+          echo "Check the Issues tab in the repository to see the new issue."
