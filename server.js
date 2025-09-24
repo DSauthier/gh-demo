@@ -2,7 +2,7 @@
 const express = require('express');
 const fs = require('fs');
 // Set up a write stream for logging
-const logStream = fs.createWriteStream('/home/ec2-user/gh-demo/app.log', { flags: 'a' });
+const logStream = fs.createWriteStream('./app.log', { flags: 'a' });
 
 // Helper to log to both console and file
 function logBoth(...args) {
