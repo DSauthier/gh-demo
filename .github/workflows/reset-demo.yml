@@ -59,4 +59,4 @@ jobs:
             --body "Please reset the main branch to match the golden-image branch. See copilot_reset_main_prompt.md for details." \
             --assignee DSauthier
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
