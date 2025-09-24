@@ -13,10 +13,7 @@ chmod +x "$0"
 # Remove the demo database
 rm -f shop-demo.db
 
-# Reset codebase to golden image
-# (Assumes 'golden-image' branch or tag exists and is up to date)
-git fetch origin
-git checkout golden-image -- .
+# Codebase is now reset by rsync from GitHub Actions (see reset-demo.yml)
 
 # Install dependencies
 npm install

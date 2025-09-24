@@ -17,6 +17,17 @@ jobs:
       - name: Notify about demo reset
         run: |
           echo "🔄 The demo environment will now be reset. All changes made during the demo will be reverted to match the latest state of the main branch."
+      - name: Checkout golden-image branch
+        uses: actions/checkout@v4
+        with:
+          ref: golden-image
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+      - name: Rsync code to EC2 (golden-image)
+        run: |
+          rsync -avz --delete --exclude '.git' --exclude 'node_modules' --exclude '*.db' ./ ${{ secrets.DEMO_SERVER_USER }}@${{ secrets.DEMO_SERVER_HOST }}:/home/ec2-user/gh-demo
       - name: Run reset script on remote server
         uses: appleboy/ssh-action@v1.0.3
         with:
