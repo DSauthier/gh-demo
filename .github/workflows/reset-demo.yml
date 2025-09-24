@@ -25,6 +25,11 @@ jobs:
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+      - name: Add EC2 host to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.DEMO_SERVER_HOST }} >> ~/.ssh/known_hosts
+
       - name: Rsync code to EC2 (golden-image)
         run: |
           rsync -avz --delete --exclude '.git' --exclude 'node_modules' --exclude '*.db' ./ ${{ secrets.DEMO_SERVER_USER }}@${{ secrets.DEMO_SERVER_HOST }}:/home/ec2-user/gh-demo
