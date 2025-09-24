@@ -11,19 +11,35 @@ async function loadProducts() {
     try {
         const response = await fetch('/api/products');
         const products = await response.json();
-        const productsHtml = products.map(product => `
-            <div class="product">
-                <div class="product-info">
-                    <h3>${product.name}</h3>
-                    <p>${product.description}</p>
-                </div>
-                <div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>
-                <div class="product-actions">
-                    <input type="number" class="quantity-input" id="qty-${product.id}" value="1" min="1">
-                    <button onclick="addToCart(${product.id})">➕ Add to Cart</button>
-                </div>
-            </div>
-        `).join('');
+        const productsHtml = `
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${products.map(product => `
+                        <tr class="product-row">
+                            <td class="product-info">
+                                <h3>${product.name}</h3>
+                                <p>${product.description}</p>
+                            </td>
+                            <td class="product-price">$${parseFloat(product.price).toFixed(2)}</td>
+                            <td class="product-quantity">
+                                <input type="number" class="quantity-input" id="qty-${product.id}" value="1" min="1">
+                            </td>
+                            <td class="product-actions">
+                                <button onclick="addToCart(${product.id})">➕ Add to Cart</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
         document.getElementById('products-list').innerHTML = productsHtml;
     } catch (error) {
         document.getElementById('products-list').innerHTML = 
