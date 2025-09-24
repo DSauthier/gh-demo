@@ -1,8 +1,14 @@
 name: Reset Demo Environment
 
 
+
 on:
   workflow_dispatch:
+    inputs:
+      confirm_reset:
+        description: '🔄 The demo environment will now be reset. All changes made during the demo will be reverted to match the latest state of the main branch.\n\nCheck this box to confirm you understand this action cannot be undone.'
+        required: true
+        type: boolean
 
 jobs:
   reset-demo:
