@@ -35,6 +35,11 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ steps.vars.outputs.user }}@${{ steps.vars.outputs.host }} "mkdir -p ${{ steps.vars.outputs.dir }}"
 
+
+      - name: Add EC2 host to known_hosts
+        run: |
+          ssh-keyscan -H ${{ steps.vars.outputs.host }} >> ~/.ssh/known_hosts
+
       - name: Deploy app to EC2
         run: |
           rsync -avz --delete --exclude '.git' --exclude 'node_modules' --exclude '*.db' ./ ${{ steps.vars.outputs.user }}@${{ steps.vars.outputs.host }}:${{ steps.vars.outputs.dir }}
