@@ -52,3 +52,15 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/DSauthier/gh-demo/dispatches \
             -d '{"event_type":"trigger-create-reset-main-issue"}'
+
+  create-reset-main-issue:
+    runs-on: ubuntu-latest
+    needs: reset-demo
+    steps:
+      - name: Create reset main branch issue
+        run: |
+          gh issue create --title "Reset main branch to golden-image" \
+            --body "Please reset the main branch to match the golden-image branch. See copilot_reset_main_prompt.md for details." \
+            --assignee DSauthier
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
