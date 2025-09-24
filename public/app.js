@@ -77,12 +77,11 @@ async function loadCart() {
 
 async function checkout() {
     try {
-        // VULNERABILITY: Send client-supplied total (can be manipulated!)
-        const total = document.getElementById('cart-total-input').value;
+        // SECURITY FIX: No longer send client-supplied total
         const response = await fetch('/api/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ total: total }) // Send client-supplied total - VULNERABLE!
+            body: JSON.stringify({}) // Server calculates total from cart items
         });
         const result = await response.json();
         if (response.ok) {
