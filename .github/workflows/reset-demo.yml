@@ -1,5 +1,6 @@
 name: Reset Demo Environment
 
+
 on:
   workflow_dispatch:
 
@@ -7,6 +8,9 @@ jobs:
   reset-demo:
     runs-on: ubuntu-latest
     steps:
+      - name: Notify about demo reset
+        run: |
+          echo "🔄 The demo environment will now be reset. All changes made during the demo will be reverted to match the latest state of the main branch."
       - name: Run reset script on remote server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -16,4 +20,5 @@ jobs:
           port: 22
           script: |
             cd /home/ec2-user/gh-demo
+            chmod +x reset-demo.sh
             ./reset-demo.sh

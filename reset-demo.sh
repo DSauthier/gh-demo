@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# Ensure this script is executable
+chmod +x "$0"
 # reset-demo.sh - Reset demo app to golden image state on Amazon Linux
 
 # Stop the app (customize for your process manager)
