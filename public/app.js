@@ -17,17 +17,17 @@ async function loadProducts() {
                     <h3>${product.name}</h3>
                     <p>${product.description}</p>
                 </div>
-                <div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>
+                <div class="product-price">${formatCurrency(product.price)}</div>
                 <div class="product-actions">
                     <input type="number" class="quantity-input" id="qty-${product.id}" value="1" min="1">
-                    <button onclick="addToCart(${product.id})">➕ Add to Cart</button>
+                    <button onclick="addToCart(${product.id})">${t('products.add_to_cart')}</button>
                 </div>
             </div>
         `).join('');
         document.getElementById('products-list').innerHTML = productsHtml;
     } catch (error) {
         document.getElementById('products-list').innerHTML = 
-            '<div class="error-msg">Error loading products: ' + error.message + '</div>';
+            `<div class="error-msg">${t('products.error')}${error.message}</div>`;
     }
 }
 
@@ -42,12 +42,12 @@ async function addToCart(productId) {
         const result = await response.json();
         if (response.ok) {
             loadCart();
-            showResult('success-msg', '✅ Item added to cart!');
+            showResult('success-msg', t('cart.add_success'));
         } else {
-            showResult('error-msg', '❌ ' + result.error);
+            showResult('error-msg', t('cart.add_error') + result.error);
         }
     } catch (error) {
-        showResult('error-msg', '❌ Error adding item: ' + error.message);
+        showResult('error-msg', t('cart.add_error') + error.message);
     }
 }
 
@@ -60,18 +60,24 @@ async function loadCart() {
             const cartHtml = cart.items.map(item => `
                 <div class="cart-item">
                     <div>${item.name} x${item.quantity}</div>
-                    <div>$${parseFloat(item.subtotal).toFixed(2)}</div>
+                    <div>${formatCurrency(item.subtotal)}</div>
                 </div>
             `).join('');
             document.getElementById('cart-items').innerHTML = cartHtml;
             total = cart.total;
         } else {
-            document.getElementById('cart-items').innerHTML = '<div>🛒 Your cart is empty</div>';
+            document.getElementById('cart-items').innerHTML = `<div>${t('cart.empty')}</div>`;
         }
         document.getElementById('cart-total-input').value = total;
+        
+        // Update the cart total label
+        const label = document.querySelector('label[for="cart-total-input"]');
+        if (label) {
+            label.textContent = t('cart.total');
+        }
     } catch (error) {
         document.getElementById('cart-items').innerHTML = 
-            '<div class="error-msg">Error loading cart: ' + error.message + '</div>';
+            `<div class="error-msg">${t('cart.add_error')}${error.message}</div>`;
     }
 }
 
@@ -86,16 +92,16 @@ async function checkout() {
         const result = await response.json();
         if (response.ok) {
             currentOrderId = result.order_id;
-            showResult('success-msg', `✅ ${result.message} (Order #${result.order_id})`, 'checkout-result');
+            showResult('success-msg', `${t('cart.checkout_success')}${result.order_id}`, 'checkout-result');
             document.getElementById('order-info').style.display = 'block';
             document.getElementById('order-details').innerHTML = 
-                `Order #${result.order_id} - Total: $${result.total}`;
+                `${t('table.order_id')} #${result.order_id} - ${t('cart.total')}${formatCurrency(result.total)}`;
             loadCart();
         } else {
-            showResult('error-msg', '❌ ' + result.error, 'checkout-result');
+            showResult('error-msg', t('cart.checkout_error') + result.error, 'checkout-result');
         }
     } catch (error) {
-        showResult('error-msg', '❌ Checkout error: ' + error.message, 'checkout-result');
+        showResult('error-msg', t('cart.checkout_error') + error.message, 'checkout-result');
     }
 }
 
@@ -105,12 +111,12 @@ async function clearCart() {
         const result = await response.json();
         if (response.ok) {
             loadCart();
-            showResult('success-msg', '✅ Cart cleared!');
+            showResult('success-msg', t('cart.clear_success'));
         } else {
-            showResult('error-msg', '❌ ' + result.error);
+            showResult('error-msg', t('cart.clear_error') + result.error);
         }
     } catch (error) {
-        showResult('error-msg', '❌ Error clearing cart: ' + error.message);
+        showResult('error-msg', t('cart.clear_error') + error.message);
     }
 }
 
