@@ -71,9 +71,16 @@ app.get('/api/cart', (req, res) => {
   });
 });
 
-// Create order (checkout) - SECURE: Calculate total server-side
+// Create order (checkout) - VULNERABLE: Uses client-supplied total!
 app.post('/api/checkout', (req, res) => {
-  // Get cart items to calculate total server-side
+  // VULNERABILITY: Trust the client-supplied total instead of calculating server-side
+  const { total } = req.body;
+
+  if (total === undefined) {
+    return res.status(400).json({ error: 'Total amount required' });
+  }
+
+  // Get cart items to verify cart exists and calculate real total
   const cartQuery = `
     SELECT c.quantity, p.price, p.id as product_id
     FROM cart c
@@ -89,20 +96,12 @@ app.post('/api/checkout', (req, res) => {
       return res.status(400).json({ error: 'Cart is empty' });
     }
 
-    // SECURITY FIX: Calculate total from cart items server-side
-    const serverCalculatedTotal = cartItems.reduce((sum, item) => 
-      sum + (item.quantity * item.price), 0
-    );
-
-    // Validate business rules
-    if (serverCalculatedTotal <= 0) {
-      return res.status(400).json({ error: 'Invalid order total' });
-    }
-
-    // Create order with server-calculated total
+    // VULNERABILITY: Use the client-supplied total directly!
+    const clientTotal = parseFloat(total);
+    // Create order with client-supplied total
     db.run(
       "INSERT INTO orders (total_amount, status) VALUES (?, 'completed')",
-      [serverCalculatedTotal],
+      [clientTotal],
       function(err) {
         if (err) {
           return res.status(500).json({ error: 'Failed to create order' });
@@ -120,7 +119,7 @@ app.post('/api/checkout', (req, res) => {
         res.json({
           message: 'Order created successfully',
           order_id: orderId,
-          total: serverCalculatedTotal.toFixed(2)
+          total: clientTotal.toFixed(2)
         });
       }
     );
