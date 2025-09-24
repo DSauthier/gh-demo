@@ -143,6 +143,7 @@ app.post('/api/checkout', (req, res) => {
 ## Acceptance Criteria
 - [ ] ✅ Checkout endpoint calculates total from cart items only
 - [ ] ✅ Client-supplied total parameter is ignored/removed
+- [ ] ✅ The checkout total input field is visually disabled (greyed out) using CSS, so the client cannot modify the total amount during checkout.
 - [ ] ✅ Orders reflect actual cart item values
 - [ ] ✅ $0 manipulation attempts fail
 - [ ] ✅ Existing legitimate functionality preserved
