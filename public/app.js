@@ -17,17 +17,29 @@ async function loadProducts() {
                     <h3>${product.name}</h3>
                     <p>${product.description}</p>
                 </div>
-                <div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>
+                <div class="product-price">${window.formatCurrency ? window.formatCurrency(parseFloat(product.price)) : '$' + parseFloat(product.price).toFixed(2)}</div>
                 <div class="product-actions">
                     <input type="number" class="quantity-input" id="qty-${product.id}" value="1" min="1">
-                    <button onclick="addToCart(${product.id})">➕ Add to Cart</button>
+                    <button onclick="addToCart(${product.id})" data-i18n="main.add_to_cart">➕ Add to Cart</button>
                 </div>
             </div>
         `).join('');
         document.getElementById('products-list').innerHTML = productsHtml;
+        
+        // Update button text translations
+        if (window.t) {
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                const translation = window.t(key);
+                if (translation && translation !== key) {
+                    element.textContent = translation;
+                }
+            });
+        }
     } catch (error) {
+        const errorMsg = window.t ? window.t('msg.loading_error', 'Error loading') : 'Error loading';
         document.getElementById('products-list').innerHTML = 
-            '<div class="error-msg">Error loading products: ' + error.message + '</div>';
+            `<div class="error-msg">${errorMsg} products: ${error.message}</div>`;
     }
 }
 
@@ -60,43 +72,57 @@ async function loadCart() {
             const cartHtml = cart.items.map(item => `
                 <div class="cart-item">
                     <div>${item.name} x${item.quantity}</div>
-                    <div>$${parseFloat(item.subtotal).toFixed(2)}</div>
+                    <div>${window.formatCurrency ? window.formatCurrency(parseFloat(item.subtotal)) : '$' + parseFloat(item.subtotal).toFixed(2)}</div>
                 </div>
             `).join('');
             document.getElementById('cart-items').innerHTML = cartHtml;
             total = cart.total;
         } else {
-            document.getElementById('cart-items').innerHTML = '<div>🛒 Your cart is empty</div>';
+            const emptyMsg = window.t ? window.t('main.cart_empty') : '🛒 Your cart is empty';
+            document.getElementById('cart-items').innerHTML = `<div>${emptyMsg}</div>`;
         }
-        document.getElementById('cart-total-input').value = total;
+        
+        // Update currency symbol and total
+        const currencyInfo = window.getCurrencyInfo ? window.getCurrencyInfo() : {symbol: '$'};
+        document.getElementById('currency-symbol').textContent = currencyInfo.symbol;
+        const convertedTotal = window.convertAmount ? window.convertAmount(total) : total;
+        document.getElementById('cart-total-input').value = convertedTotal.toFixed(2);
+        
     } catch (error) {
+        const errorMsg = window.t ? window.t('msg.loading_error', 'Error loading') : 'Error loading';
         document.getElementById('cart-items').innerHTML = 
-            '<div class="error-msg">Error loading cart: ' + error.message + '</div>';
+            `<div class="error-msg">${errorMsg} cart: ${error.message}</div>`;
     }
 }
 
 async function checkout() {
     try {
         // VULNERABILITY: Send client-supplied total (can be manipulated!)
-        const total = document.getElementById('cart-total-input').value;
+        // Convert the displayed amount back to USD for server
+        const displayedTotal = document.getElementById('cart-total-input').value;
+        const usdTotal = window.currentLanguage && window.currentLanguage() === 'pt' 
+            ? displayedTotal / 5 : displayedTotal;
+        
         const response = await fetch('/api/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ total: total }) // Send client-supplied total - VULNERABLE!
+            body: JSON.stringify({ total: usdTotal }) // Send client-supplied total - VULNERABLE!
         });
         const result = await response.json();
         if (response.ok) {
             currentOrderId = result.order_id;
             showResult('success-msg', `✅ ${result.message} (Order #${result.order_id})`, 'checkout-result');
             document.getElementById('order-info').style.display = 'block';
+            const displayTotal = window.formatCurrency ? window.formatCurrency(parseFloat(result.total)) : `$${result.total}`;
             document.getElementById('order-details').innerHTML = 
-                `Order #${result.order_id} - Total: $${result.total}`;
+                `Order #${result.order_id} - Total: ${displayTotal}`;
             loadCart();
         } else {
             showResult('error-msg', '❌ ' + result.error, 'checkout-result');
         }
     } catch (error) {
-        showResult('error-msg', '❌ Checkout error: ' + error.message, 'checkout-result');
+        const errorMsg = window.t ? window.t('msg.checkout_error', 'Checkout error') : 'Checkout error';
+        showResult('error-msg', `❌ ${errorMsg}: ${error.message}`, 'checkout-result');
     }
 }
 
@@ -106,12 +132,14 @@ async function clearCart() {
         const result = await response.json();
         if (response.ok) {
             loadCart();
-            showResult('success-msg', '✅ Cart cleared!');
+            const successMsg = window.t ? window.t('msg.cart_cleared') : '✅ Cart cleared!';
+            showResult('success-msg', successMsg);
         } else {
             showResult('error-msg', '❌ ' + result.error);
         }
     } catch (error) {
-        showResult('error-msg', '❌ Error clearing cart: ' + error.message);
+        const errorMsg = window.t ? window.t('msg.loading_error', 'Error clearing') : 'Error clearing';
+        showResult('error-msg', `❌ ${errorMsg} cart: ${error.message}`);
     }
 }
 
