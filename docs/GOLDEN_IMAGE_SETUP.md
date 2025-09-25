@@ -7,7 +7,7 @@ This guide will help you set up a reproducible, always-fresh demo environment fo
 ## 1. Create a Golden Image Branch or Tag
 
 - After setting up your app in the desired pre-fix state, create a branch or tag:
-
+  
 ```sh
 git checkout main
 git pull
