@@ -111,7 +111,6 @@ app.post('/api/checkout', (req, res) => {
   });
 });
 
-
 // FIXED: Secure refund processing with proper validation
 app.post('/api/refund', (req, res) => {
   const { order_id, refund_amount } = req.body;
