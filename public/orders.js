@@ -10,10 +10,19 @@ async function loadOrders() {
         const orders = await response.json();
         
         if (orders.length === 0) {
+            const noOrdersMsg = typeof translate === 'function' 
+                ? translate('orders.no_orders')
+                : 'No orders found. Go to the ';
+            const shopLinkText = typeof translate === 'function' 
+                ? translate('orders.no_orders_link')
+                : 'shop';
+            const noOrdersEnd = typeof translate === 'function' 
+                ? translate('orders.no_orders_end')
+                : ' to create some orders!';
             document.getElementById('orders-list').innerHTML = `
                 <tr>
                     <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
-                        No orders found. Go to the <a href="index.html">shop</a> to create some orders!
+                        ${noOrdersMsg}<a href="index.html">${shopLinkText}</a>${noOrdersEnd}
                     </td>
                 </tr>
             `;
@@ -34,11 +43,14 @@ async function loadOrders() {
             } else if (amount < 1) {
                 amountClass = 'amount-exploited';
             }
+            const formattedAmount = typeof formatCurrency === 'function' 
+                ? formatCurrency(amount) 
+                : `$${amount.toFixed(2)}`;
             return `
                 <tr>
                     <td>#${order.id}</td>
                     <td>${date}</td>
-                    <td class="${amountClass}">$${amount.toFixed(2)}</td>
+                    <td class="${amountClass}">${formattedAmount}</td>
                     <td>${order.status}</td>
                 </tr>
             `;
@@ -68,9 +80,18 @@ function updateStats(orders) {
     const estimatedLostRevenue = exploitedOrders.length * 75; // Assume $75 average per exploited order
 
     document.getElementById('total-orders').textContent = totalOrders;
-    document.getElementById('total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
+    
+    const formattedRevenue = typeof formatCurrency === 'function' 
+        ? formatCurrency(totalRevenue) 
+        : `$${totalRevenue.toFixed(2)}`;
+    document.getElementById('total-revenue').textContent = formattedRevenue;
+    
     document.getElementById('suspicious-orders').textContent = suspiciousOrders;
-    document.getElementById('lost-revenue').textContent = `$${estimatedLostRevenue.toFixed(2)}`;
+    
+    const formattedLostRevenue = typeof formatCurrency === 'function' 
+        ? formatCurrency(estimatedLostRevenue) 
+        : `$${estimatedLostRevenue.toFixed(2)}`;
+    document.getElementById('lost-revenue').textContent = formattedLostRevenue;
 }
 
 // Expose function globally
