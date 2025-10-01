@@ -48,9 +48,10 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
+.product-info { flex: 1; min-width: 0; }
 .product-info h3 { color: #333; margin-bottom: 5px; }
 .product-info p { color: #666; font-size: 0.9em; }
-.product-price { font-weight: bold; color: #667eea; font-size: 1.2em; }
+.product-price { font-weight: bold; color: #667eea; font-size: 1.2em; min-width: 80px; text-align: right; }
 
 .product-actions { display: flex; align-items: center; gap: 10px; }
 .quantity-input { width: 50px; padding: 4px; font-size: 1em; }
