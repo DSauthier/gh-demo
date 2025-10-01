@@ -34,8 +34,9 @@ body {
 }
 
 .product { 
-    display: flex; 
-    justify-content: space-between; 
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 20px;
     align-items: center;
     padding: 15px; 
     margin: 10px 0; 
@@ -50,7 +51,7 @@ body {
 
 .product-info h3 { color: #333; margin-bottom: 5px; }
 .product-info p { color: #666; font-size: 0.9em; }
-.product-price { font-weight: bold; color: #667eea; font-size: 1.2em; }
+.product-price { font-weight: bold; color: #667eea; font-size: 1.2em; min-width: 80px; text-align: right; }
 
 .product-actions { display: flex; align-items: center; gap: 10px; }
 .quantity-input { width: 50px; padding: 4px; font-size: 1em; }
