@@ -17,10 +17,10 @@ async function loadProducts() {
                     <h3>${product.name}</h3>
                     <p>${product.description}</p>
                 </div>
-                <div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>
+                <div class="product-price">${formatCurrency(product.price)}</div>
                 <div class="product-actions">
                     <input type="number" class="quantity-input" id="qty-${product.id}" value="1" min="1">
-                    <button onclick="addToCart(${product.id})">➕ Add to Cart</button>
+                    <button onclick="addToCart(${product.id})" data-i18n="shop.add_to_cart">➕ Add to Cart</button>
                 </div>
             </div>
         `).join('');
@@ -42,7 +42,7 @@ async function addToCart(productId) {
         const result = await response.json();
         if (response.ok) {
             loadCart();
-            showResult('success-msg', '✅ Item added to cart!');
+            showResult('success-msg', t('shop.item_added'));
         } else {
             showResult('error-msg', '❌ ' + result.error);
         }
@@ -60,15 +60,16 @@ async function loadCart() {
             const cartHtml = cart.items.map(item => `
                 <div class="cart-item">
                     <div>${item.name} x${item.quantity}</div>
-                    <div>$${parseFloat(item.subtotal).toFixed(2)}</div>
+                    <div>${formatCurrency(item.subtotal)}</div>
                 </div>
             `).join('');
             document.getElementById('cart-items').innerHTML = cartHtml;
             total = cart.total;
         } else {
-            document.getElementById('cart-items').innerHTML = '<div>🛒 Your cart is empty</div>';
+            document.getElementById('cart-items').innerHTML = '<div data-i18n="shop.cart_empty">🛒 Your cart is empty</div>';
         }
-        document.getElementById('cart-total-input').value = total;
+        document.getElementById('cart-total-input').value = formatCurrency(total, false);
+        document.getElementById('currency-symbol').textContent = getCurrencySymbol();
     } catch (error) {
         document.getElementById('cart-items').innerHTML = 
             '<div class="error-msg">Error loading cart: ' + error.message + '</div>';
@@ -86,16 +87,20 @@ async function checkout() {
         const result = await response.json();
         if (response.ok) {
             currentOrderId = result.order_id;
-            showResult('success-msg', `✅ ${result.message} (Order #${result.order_id})`, 'checkout-result');
+            const successMsg = t('shop.checkout_success');
+            showResult('success-msg', `${successMsg} (Order #${result.order_id})`, 'checkout-result');
             document.getElementById('order-info').style.display = 'block';
-            document.getElementById('order-details').innerHTML = 
-                `Order #${result.order_id} - Total: $${result.total}`;
+            const orderTotalText = t('shop.order_total')
+                .replace('${id}', result.order_id)
+                .replace('${total}', formatCurrency(result.total));
+            document.getElementById('order-details').innerHTML = orderTotalText;
             loadCart();
         } else {
             showResult('error-msg', '❌ ' + result.error, 'checkout-result');
         }
     } catch (error) {
-        showResult('error-msg', '❌ Checkout error: ' + error.message, 'checkout-result');
+        const errorMsg = t('shop.checkout_error');
+        showResult('error-msg', `${errorMsg} ${error.message}`, 'checkout-result');
     }
 }
 
@@ -105,7 +110,7 @@ async function clearCart() {
         const result = await response.json();
         if (response.ok) {
             loadCart();
-            showResult('success-msg', '✅ Cart cleared!');
+            showResult('success-msg', t('shop.cart_cleared'));
         } else {
             showResult('error-msg', '❌ ' + result.error);
         }

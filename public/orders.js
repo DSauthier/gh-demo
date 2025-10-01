@@ -38,7 +38,7 @@ async function loadOrders() {
                 <tr>
                     <td>#${order.id}</td>
                     <td>${date}</td>
-                    <td class="${amountClass}">$${amount.toFixed(2)}</td>
+                    <td class="${amountClass}">${formatCurrency(amount)}</td>
                     <td>${order.status}</td>
                 </tr>
             `;
@@ -68,9 +68,9 @@ function updateStats(orders) {
     const estimatedLostRevenue = exploitedOrders.length * 75; // Assume $75 average per exploited order
 
     document.getElementById('total-orders').textContent = totalOrders;
-    document.getElementById('total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
+    document.getElementById('total-revenue').textContent = formatCurrency(totalRevenue);
     document.getElementById('suspicious-orders').textContent = suspiciousOrders;
-    document.getElementById('lost-revenue').textContent = `$${estimatedLostRevenue.toFixed(2)}`;
+    document.getElementById('lost-revenue').textContent = formatCurrency(estimatedLostRevenue);
 }
 
 // Expose function globally
