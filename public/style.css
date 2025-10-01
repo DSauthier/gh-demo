@@ -8,7 +8,7 @@ body {
 }
 .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
 .header { 
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
     color: white; 
     padding: 20px 0; 
     margin-bottom: 30px;
@@ -28,7 +28,7 @@ body {
 .section-title { 
     font-size: 1.5em; 
     margin-bottom: 20px; 
-    color: #667eea;
+    color: #ff6b35;
     border-bottom: 2px solid #eee;
     padding-bottom: 10px;
 }
@@ -50,7 +50,7 @@ body {
 
 .product-info h3 { color: #333; margin-bottom: 5px; }
 .product-info p { color: #666; font-size: 0.9em; }
-.product-price { font-weight: bold; color: #667eea; font-size: 1.2em; }
+.product-price { font-weight: bold; color: #ff6b35; font-size: 1.2em; }
 
 .product-actions { display: flex; align-items: center; gap: 10px; }
 .quantity-input { width: 50px; padding: 4px; font-size: 1em; }
@@ -61,7 +61,7 @@ body {
 .action-section { display: flex; gap: 10px; margin: 10px 0; }
 
 button { padding: 8px 16px; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; transition: background 0.2s; }
-button.success { background: #667eea; color: white; }
+button.success { background: #ff6b35; color: white; }
 button.danger { background: #e53e3e; color: white; }
 button:active { opacity: 0.8; }
 
