@@ -58,6 +58,12 @@ body {
 .cart-section { min-width: 350px; }
 .cart-item { display: flex; justify-content: space-between; margin: 8px 0; }
 .cart-total { margin: 18px 0; font-size: 1.2em; }
+.cart-total input[readonly] { 
+    background-color: #f0f0f0; 
+    color: #666; 
+    cursor: not-allowed;
+    border: 1px solid #ccc;
+}
 .action-section { display: flex; gap: 10px; margin: 10px 0; }
 
 button { padding: 8px 16px; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; transition: background 0.2s; }
