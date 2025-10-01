@@ -77,11 +77,11 @@ async function loadCart() {
 
 async function checkout() {
     try {
-        const total = document.getElementById('cart-total-input').value;
+        // Security Fix: No longer send client-supplied total to server
         const response = await fetch('/api/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ total })
+            body: JSON.stringify({})
         });
         const result = await response.json();
         if (response.ok) {
