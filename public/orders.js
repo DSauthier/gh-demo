@@ -4,6 +4,11 @@ document.addEventListener('DOMContentLoaded', function() {
     loadOrders();
 });
 
+// Listen for language changes to reload orders
+window.addEventListener('languageChanged', function() {
+    loadOrders();
+});
+
 async function loadOrders() {
     try {
         const response = await fetch('/api/orders');
@@ -13,7 +18,9 @@ async function loadOrders() {
             document.getElementById('orders-list').innerHTML = `
                 <tr>
                     <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
-                        No orders found. Go to the <a href="index.html">shop</a> to create some orders!
+                        <span data-i18n="orders.no_orders">${t('orders.no_orders')}</span>
+                        <a href="index.html" data-i18n="orders.no_orders_link">${t('orders.no_orders_link')}</a>
+                        <span data-i18n="orders.no_orders_end">${t('orders.no_orders_end')}</span>
                     </td>
                 </tr>
             `;
@@ -28,6 +35,7 @@ async function loadOrders() {
         const ordersHtml = orders.map(order => {
             const date = new Date(order.created_at).toLocaleString();
             const amount = parseFloat(order.total_amount);
+            const amountInCurrency = formatCurrency(amount);
             let amountClass = 'amount-normal';
             if (amount <= 0) {
                 amountClass = 'amount-exploited';
@@ -38,7 +46,7 @@ async function loadOrders() {
                 <tr>
                     <td>#${order.id}</td>
                     <td>${date}</td>
-                    <td class="${amountClass}">$${amount.toFixed(2)}</td>
+                    <td class="${amountClass}">${amountInCurrency}</td>
                     <td>${order.status}</td>
                 </tr>
             `;
@@ -68,9 +76,9 @@ function updateStats(orders) {
     const estimatedLostRevenue = exploitedOrders.length * 75; // Assume $75 average per exploited order
 
     document.getElementById('total-orders').textContent = totalOrders;
-    document.getElementById('total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
+    document.getElementById('total-revenue').textContent = formatCurrency(totalRevenue);
     document.getElementById('suspicious-orders').textContent = suspiciousOrders;
-    document.getElementById('lost-revenue').textContent = `$${estimatedLostRevenue.toFixed(2)}`;
+    document.getElementById('lost-revenue').textContent = formatCurrency(estimatedLostRevenue);
 }
 
 // Expose function globally

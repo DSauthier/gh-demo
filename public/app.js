@@ -7,27 +7,36 @@ document.addEventListener('DOMContentLoaded', function() {
     loadCart();
 });
 
+// Listen for language changes to reload products and cart
+window.addEventListener('languageChanged', function() {
+    loadProducts();
+    loadCart();
+});
+
 async function loadProducts() {
     try {
         const response = await fetch('/api/products');
         const products = await response.json();
-        const productsHtml = products.map(product => `
-            <div class="product">
-                <div class="product-info">
-                    <h3>${product.name}</h3>
-                    <p>${product.description}</p>
+        const productsHtml = products.map(product => {
+            const priceInCurrency = formatCurrency(parseFloat(product.price));
+            return `
+                <div class="product">
+                    <div class="product-info">
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                    </div>
+                    <div class="product-price">${priceInCurrency}</div>
+                    <div class="product-actions">
+                        <input type="number" class="quantity-input" id="qty-${product.id}" value="1" min="1">
+                        <button onclick="addToCart(${product.id})" data-i18n="main.add_to_cart">➕ Add to Cart</button>
+                    </div>
                 </div>
-                <div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>
-                <div class="product-actions">
-                    <input type="number" class="quantity-input" id="qty-${product.id}" value="1" min="1">
-                    <button onclick="addToCart(${product.id})">➕ Add to Cart</button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
         document.getElementById('products-list').innerHTML = productsHtml;
     } catch (error) {
         document.getElementById('products-list').innerHTML = 
-            '<div class="error-msg">Error loading products: ' + error.message + '</div>';
+            '<div class="error-msg">' + t('main.error_loading_products') + ' ' + error.message + '</div>';
     }
 }
 
@@ -42,12 +51,12 @@ async function addToCart(productId) {
         const result = await response.json();
         if (response.ok) {
             loadCart();
-            showResult('success-msg', '✅ Item added to cart!');
+            showResult('success-msg', t('main.item_added'));
         } else {
             showResult('error-msg', '❌ ' + result.error);
         }
     } catch (error) {
-        showResult('error-msg', '❌ Error adding item: ' + error.message);
+        showResult('error-msg', t('main.error_adding_item') + ' ' + error.message);
     }
 }
 
@@ -57,45 +66,55 @@ async function loadCart() {
         const cart = await response.json();
         let total = 0;
         if (cart.items && cart.items.length > 0) {
-            const cartHtml = cart.items.map(item => `
-                <div class="cart-item">
-                    <div>${item.name} x${item.quantity}</div>
-                    <div>$${parseFloat(item.subtotal).toFixed(2)}</div>
-                </div>
-            `).join('');
+            const cartHtml = cart.items.map(item => {
+                const subtotalInCurrency = formatCurrency(parseFloat(item.subtotal));
+                return `
+                    <div class="cart-item">
+                        <div>${item.name} x${item.quantity}</div>
+                        <div>${subtotalInCurrency}</div>
+                    </div>
+                `;
+            }).join('');
             document.getElementById('cart-items').innerHTML = cartHtml;
             total = cart.total;
         } else {
-            document.getElementById('cart-items').innerHTML = '<div>🛒 Your cart is empty</div>';
+            document.getElementById('cart-items').innerHTML = '<div>' + t('main.cart_empty') + '</div>';
         }
-        document.getElementById('cart-total-input').value = total;
+        // Convert total to current currency
+        const totalInCurrency = parseFloat(total) * getCurrencyRate();
+        document.getElementById('cart-total-input').value = totalInCurrency.toFixed(2);
+        document.getElementById('currency-symbol').textContent = getCurrencySymbol();
     } catch (error) {
         document.getElementById('cart-items').innerHTML = 
-            '<div class="error-msg">Error loading cart: ' + error.message + '</div>';
+            '<div class="error-msg">' + t('main.error_loading_cart') + ' ' + error.message + '</div>';
     }
 }
 
 async function checkout() {
     try {
-        const total = document.getElementById('cart-total-input').value;
+        // Convert displayed total back to USD for server
+        const displayedTotal = document.getElementById('cart-total-input').value;
+        const totalInUSD = parseFloat(displayedTotal) / getCurrencyRate();
+        
         const response = await fetch('/api/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ total })
+            body: JSON.stringify({ total: totalInUSD })
         });
         const result = await response.json();
         if (response.ok) {
             currentOrderId = result.order_id;
-            showResult('success-msg', `✅ ${result.message} (Order #${result.order_id})`, 'checkout-result');
+            const totalDisplay = formatCurrency(parseFloat(result.total));
+            showResult('success-msg', `${t('main.order_success')} ${result.message} (${t('main.order_total')}${result.order_id})`, 'checkout-result');
             document.getElementById('order-info').style.display = 'block';
             document.getElementById('order-details').innerHTML = 
-                `Order #${result.order_id} - Total: $${result.total}`;
+                `${t('main.order_total')}${result.order_id} - ${t('main.total')} ${totalDisplay}`;
             loadCart();
         } else {
             showResult('error-msg', '❌ ' + result.error, 'checkout-result');
         }
     } catch (error) {
-        showResult('error-msg', '❌ Checkout error: ' + error.message, 'checkout-result');
+        showResult('error-msg', t('main.error_checkout') + ' ' + error.message, 'checkout-result');
     }
 }
 
@@ -105,12 +124,12 @@ async function clearCart() {
         const result = await response.json();
         if (response.ok) {
             loadCart();
-            showResult('success-msg', '✅ Cart cleared!');
+            showResult('success-msg', t('main.cart_cleared'));
         } else {
             showResult('error-msg', '❌ ' + result.error);
         }
     } catch (error) {
-        showResult('error-msg', '❌ Error clearing cart: ' + error.message);
+        showResult('error-msg', t('main.error_clearing_cart') + ' ' + error.message);
     }
 }
 
