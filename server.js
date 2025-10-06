@@ -71,16 +71,9 @@ app.get('/api/cart', (req, res) => {
   });
 });
 
-// Create order (checkout) - VULNERABLE: Uses client-supplied total!
+// Create order (checkout) - FIXED: Calculate total server-side
 app.post('/api/checkout', (req, res) => {
-  // VULNERABILITY: Trust the client-supplied total instead of calculating server-side
-  const { total } = req.body;
-
-  if (total === undefined) {
-    return res.status(400).json({ error: 'Total amount required' });
-  }
-
-  // Get cart items to verify cart exists and calculate real total
+  // Get cart items to calculate total server-side
   const cartQuery = `
     SELECT c.quantity, p.price, p.id as product_id
     FROM cart c
@@ -96,12 +89,13 @@ app.post('/api/checkout', (req, res) => {
       return res.status(400).json({ error: 'Cart is empty' });
     }
 
-    // VULNERABILITY: Use the client-supplied total directly!
-    const clientTotal = parseFloat(total);
-    // Create order with client-supplied total
+    // FIXED: Calculate total server-side from cart items
+    const serverTotal = cartItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    
+    // Create order with server-calculated total
     db.run(
       "INSERT INTO orders (total_amount, status) VALUES (?, 'completed')",
-      [clientTotal],
+      [serverTotal],
       function(err) {
         if (err) {
           return res.status(500).json({ error: 'Failed to create order' });
@@ -119,7 +113,7 @@ app.post('/api/checkout', (req, res) => {
         res.json({
           message: 'Order created successfully',
           order_id: orderId,
-          total: clientTotal.toFixed(2)
+          total: serverTotal.toFixed(2)
         });
       }
     );
@@ -208,6 +202,6 @@ app.get('/api/orders', (req, res) => {
 
 app.listen(PORT, HOST, () => {
   logBoth(`🛒 Shopping cart server running at http://${HOST}:${PORT}`);
-  logBoth(`🔥 VULNERABLE VERSION - Refund system has security issues!`);
-  logBoth(`🎯 Try: Add items to cart, checkout, then request refund with NEGATIVE amount`);
+  logBoth(`✅ SECURE VERSION - Checkout total manipulation fixed!`);
+  logBoth(`🔒 Server-side total calculation prevents client manipulation`);
 });
