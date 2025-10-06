@@ -70,3 +70,12 @@ button:active { opacity: 0.8; }
 .error-msg { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; }
 
 .order-info { background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-top: 18px; }
+
+/* Disable total input field - security fix to prevent manipulation */
+#cart-total-input {
+    background-color: #e2e8f0;
+    color: #4a5568;
+    cursor: not-allowed;
+    pointer-events: none;
+    border: 1px solid #cbd5e0;
+}
